@@ -1,0 +1,98 @@
+{
+  "BSS_LoadImagesFolder": {
+    "display_name": "BSS Load Images from Folder 📂",
+    "description": "Load images from a folder and return them as a batch for processing. Supports JPG, JPEG, PNG, and WEBP formats.",
+    "category": "BSS/Image Processing",
+    "inputs": {
+      "folder_path": {
+        "type": "STRING",
+        "description": "Path to folder containing images"
+      }
+    },
+    "outputs": {
+      "images": {
+        "type": "IMAGE",
+        "description": "List of loaded images"
+      },
+      "filenames": {
+        "type": "STRING", 
+        "description": "List of corresponding filenames"
+      },
+      "folder_path": {
+        "type": "STRING",
+        "description": "Original folder path"
+      }
+    }
+  },
+  "BSS_WD14BatchTagger": {
+    "display_name": "BSS WD14 Batch Tagger 🌿",
+    "description": "Processes images using WD14 models and generates automatic tags with batch processing support.",
+    "category": "BSS/Image Processing",
+    "inputs": {
+      "image": {
+        "type": "IMAGE",
+        "description": "Input image to tag"
+      },
+      "filename": {
+        "type": "STRING",
+        "description": "Original filename"
+      },
+      "folder_path": {
+        "type": "STRING",
+        "description": "Output folder for tag files"
+      },
+      "model": {
+        "type": "SELECT",
+        "description": "WD14 model to use (automatically downloads if not available)",
+        "options": [
+          "wd-vit-tagger-v3|WD ViT Tagger v3",
+          "wd-swinv2-tagger-v3|WD SwinV2 Tagger v3", 
+          "wd-eva02-large-tagger-v3|WD EVA02 Large Tagger v3",
+          "wd-convnext-tagger-v3|WD ConvNeXT Tagger v3"
+        ]
+      },
+      "threshold": {
+        "type": "FLOAT",
+        "description": "Confidence threshold for tags (0.0-1.0)",
+        "default": 0.35,
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.01
+      },
+      "character_threshold": {
+        "type": "FLOAT", 
+        "description": "Character-specific threshold (0.0-1.0)",
+        "default": 0.85,
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.01
+      },
+      "replace_underscore": {
+        "type": "BOOLEAN",
+        "description": "Replace underscores with spaces in tags",
+        "default": true
+      },
+      "use_gpu": {
+        "type": "BOOLEAN",
+        "description": "Enable GPU acceleration",
+        "default": false
+      },
+      "prepend_tags": {
+        "type": "STRING",
+        "description": "Custom tags to prepend to results",
+        "multiline": true
+      },
+      "exclude_tags": {
+        "type": "STRING",
+        "description": "Tags to exclude from results (comma-separated)",
+        "multiline": true
+      }
+    },
+    "outputs": {
+      "tags": {
+        "type": "STRING",
+        "description": "Generated tags for the image"
+      }
+    }
+  }
+}

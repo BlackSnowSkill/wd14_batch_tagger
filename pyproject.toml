@@ -1,0 +1,19 @@
+[project]
+name = "wd14-batch-tagger"
+description = "Automatic image tagging using WD14 models with batch processing capabilities for ComfyUI"
+version = "1.0.0"
+license = { file = "LICENSE.txt" }
+dependencies = [
+    "onnxruntime>=1.16.0",
+    "numpy>=1.24.0",
+    "pillow>=9.0.0",
+    "huggingface-hub>=0.16.0"
+]
+
+[project.urls]
+Repository = "https://github.com/blacksnowskill/wd14_batch_tagger"
+
+[tool.comfy]
+PublisherId = "blacksnowskill"
+DisplayName = "BSS WD14 Batch Tagger"
+Icon = "https://raw.githubusercontent.com/blacksnowskill/wd14_batch_tagger/main/icon.svg"

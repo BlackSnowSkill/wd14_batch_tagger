@@ -1,0 +1,42 @@
+{
+  "name": "wd14-batch-tagger",
+  "version": "1.0.0",
+  "description": "Automatic image tagging using WD14 models with batch processing capabilities",
+  "author": "Blacksnowskill",
+  "license": "MIT",
+  "homepage": "https://github.com/blacksnowskill/wd14_batch_tagger",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/blacksnowskill/wd14_batch_tagger.git"
+  },
+  "keywords": [
+    "comfyui",
+    "custom-node",
+    "wd14",
+    "image-tagging",
+    "ai",
+    "machine-learning",
+    "batch-processing"
+  ],
+  "comfyui": {
+    "display_name": "BSS WD14 Batch Tagger",
+    "description": "Automatic image tagging using WD14 models with batch processing and GPU acceleration",
+    "author": "Blacksnowskill",
+    "category": "Image Processing",
+    "tags": ["image", "tagging", "wd14", "batch", "gpu"],
+    "reference": "https://github.com/blacksnowskill/wd14_batch_tagger",
+    "install_script": "install.py"
+  },
+  "dependencies": {
+    "onnxruntime": ">=1.16.0",
+    "numpy": ">=1.24.0",
+    "pillow": ">=9.0.0",
+    "huggingface-hub": ">=0.16.0"
+  },
+  "engines": {
+    "python": ">=3.8"
+  },
+  "scripts": {
+    "install": "python install.py"
+  }
+}
