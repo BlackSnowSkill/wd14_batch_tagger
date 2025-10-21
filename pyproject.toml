@@ -11,9 +11,9 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/blacksnowskill/wd14_batch_tagger"
+Repository = "https://github.com/BlackSnowSkill/wd14_batch_tagger"
 
 [tool.comfy]
 PublisherId = "blacksnowskill"
 DisplayName = "BSS WD14 Batch Tagger"
-Icon = "https://raw.githubusercontent.com/blacksnowskill/wd14_batch_tagger/main/icon.svg"
+Icon = "https://raw.githubusercontent.com/BlackSnowSkill/wd14_batch_tagger/main/icon.svg"
