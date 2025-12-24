@@ -73,6 +73,35 @@ Models download automatically on first use.
 - ComfyUI
 - CUDA GPU (optional)
 
+## Troubleshooting
+
+### onnxruntime Not Available Error
+
+If you see "onnxruntime is not available", fix it:
+
+**Step 1: Remove conflicting packages**
+```bash
+pip uninstall onnxruntime onnxruntime-gpu -y
+```
+
+**Step 2: Install correct version**
+```bash
+pip install 'onnxruntime>=1.18.0,<2.0.0'
+```
+
+**Step 3: Verify installation**
+```bash
+python -c "import onnxruntime; print(onnxruntime.__version__)"
+```
+
+**Or reinstall the entire node:**
+```bash
+cd ComfyUI/custom_nodes/wd14_batch_tagger
+pip install -r requirements.txt --upgrade --force-reinstall
+```
+
+**Note:** Make sure you're using the correct Python environment (ComfyUI's venv).
+
 ## Support
 
 - **GitHub**: [Issues](https://github.com/BlackSnowSkill/wd14_batch_tagger/issues)

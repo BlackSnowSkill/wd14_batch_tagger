@@ -44,15 +44,32 @@ def install_dependencies():
         print("Error: requirements.txt not found")
         return False
     
-    # Install dependencies
-    if not run_command(f"pip install -r {requirements_file}", "Installing dependencies from requirements.txt"):
+    # Install dependencies with upgrade flag for onnxruntime
+    if not run_command(f"pip install --upgrade -r {requirements_file}", "Installing dependencies from requirements.txt"):
         print("Failed to install dependencies from requirements.txt")
         return False
     
-    # Check for GPU support
+    # Force reinstall onnxruntime if there are compatibility issues
+    print("Ensuring onnxruntime compatibility...")
+    run_command("pip install --upgrade --force-reinstall 'onnxruntime>=1.18.0,<2.0.0'", "Ensuring onnxruntime compatibility")
+    
+    # Check for GPU support and version
     print("Checking for GPU support...")
     try:
         import onnxruntime as ort
+        # Check version compatibility
+        version = ort.__version__
+        print(f"onnxruntime version: {version}")
+        
+        # Simple version check (major.minor format)
+        try:
+            major, minor = map(int, version.split('.')[:2])
+            if major < 1 or (major == 1 and minor < 18):
+                print("⚠️  onnxruntime version is too old, upgrading...")
+                run_command("pip install --upgrade 'onnxruntime>=1.18.0,<2.0.0'", "Upgrading onnxruntime")
+        except (ValueError, AttributeError):
+            print("⚠️  Could not parse onnxruntime version, but it's installed")
+        
         providers = ort.get_available_providers()
         if "CUDAExecutionProvider" in providers:
             print("✅ CUDA support detected - GPU acceleration available")
@@ -60,6 +77,8 @@ def install_dependencies():
             print("ℹ️  CUDA support not available - will use CPU only")
     except ImportError:
         print("⚠️  Could not check GPU support - onnxruntime not properly installed")
+    except Exception as e:
+        print(f"⚠️  Error checking onnxruntime: {e}")
     
     return True
 

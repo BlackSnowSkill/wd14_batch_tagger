@@ -3,15 +3,47 @@ import numpy as np
 from PIL import Image
 from pathlib import Path
 import csv
-import onnxruntime as ort
 from typing import Tuple, List, Dict, Any, Optional
 import logging
 from huggingface_hub import hf_hub_download
 import time
+import sys
 
-# Configure logging
+# Configure logging FIRST, before any imports that might fail
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Import onnxruntime with error handling
+try:
+    import onnxruntime as ort
+    # Verify version compatibility
+    try:
+        version = ort.__version__
+        major, minor = map(int, version.split('.')[:2])
+        if major < 1 or (major == 1 and minor < 18):
+            logger.warning(f"onnxruntime version {version} may be incompatible. Recommended: >=1.18.0,<2.0.0")
+    except (ValueError, AttributeError):
+        pass  # Version check failed, but onnxruntime is imported
+except ImportError as e:
+    error_msg = (
+        f"[BSS WD14] ERROR: onnxruntime is not available in Python {sys.version.split()[0]}\n"
+        f"Installation path: {sys.executable}\n"
+        f"To fix, run:\n"
+        f"  {sys.executable} -m pip uninstall onnxruntime onnxruntime-gpu -y\n"
+        f"  {sys.executable} -m pip install 'onnxruntime>=1.18.0,<2.0.0'\n"
+        f"Original error: {e}"
+    )
+    logger.error(error_msg)
+    raise ImportError(error_msg) from e
+except Exception as e:
+    error_msg = (
+        f"[BSS WD14] ERROR: Failed to import onnxruntime: {e}\n"
+        f"Python: {sys.version.split()[0]}\n"
+        f"Path: {sys.executable}\n"
+        f"Try: {sys.executable} -m pip install --upgrade --force-reinstall 'onnxruntime>=1.18.0,<2.0.0'"
+    )
+    logger.error(error_msg)
+    raise ImportError(error_msg) from e
 
 # ComfyUI progress system integration
 def update_progress(progress: float, message: str = ""):
@@ -400,15 +432,6 @@ class BSS_WD14BatchTagger:
     FUNCTION = "tag_batch"
     OUTPUT_NODE = True
     CATEGORY = "BSS/Image Processing"
-    
-    # ComfyUI progress bar support
-    @classmethod
-    def IS_CHANGED(cls, **kwargs):
-        return float("inf")
-    
-    @classmethod
-    def VALIDATE_INPUTS(cls, **kwargs):
-        return True
 
     def tag_batch(self, image: np.ndarray, filename: str, folder_path: str, model: str, 
                    threshold: float, character_threshold: float, replace_underscore: bool, 
@@ -472,7 +495,12 @@ class BSS_WD14BatchTagger:
                 return ("",)
 
             # Resize and center image
-            img = img.resize(new_size, Image.LANCZOS)
+            try:
+                # Use new Pillow API if available
+                img = img.resize(new_size, Image.Resampling.LANCZOS)
+            except AttributeError:
+                # Fallback for older Pillow versions
+                img = img.resize(new_size, Image.LANCZOS)
             square = Image.new("RGB", (input_size, input_size), (255, 255, 255))
             paste_pos = ((input_size - new_size[0]) // 2, (input_size - new_size[1]) // 2)
             square.paste(img, paste_pos)
