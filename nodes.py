@@ -479,6 +479,20 @@ class BSS_WD14BatchTagger:
                 use_gpu,
             )
 
+        try:
+            model_name = model.split("|")[0] if "|" in model else model
+            _, result_tags, _ = run_wd14_single(
+                image,
+                model_name,
+                general_threshold,
+                character_threshold,
+                meta_threshold,
+                rating_threshold,
+                replace_underscore,
+                exclude_tags,
+                use_gpu,
+            )
+
     def tag_batch(self, image: Any, filename: str, folder_path: str, model: str, 
                    threshold: float, character_threshold: float, replace_underscore: bool, 
                    use_gpu: bool, prepend_tags: str, exclude_tags: str) -> Tuple[str]:
