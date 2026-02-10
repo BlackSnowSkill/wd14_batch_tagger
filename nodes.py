@@ -8,6 +8,7 @@ import logging
 from huggingface_hub import hf_hub_download
 import time
 import sys
+import torch
 
 # Configure logging FIRST, before any imports that might fail
 logging.basicConfig(level=logging.INFO)
@@ -86,6 +87,7 @@ batch_progress = BatchProgressManager()
 model_cache = {
     'session': None,
     'tags': None,
+    'tag_categories': None,
     'model_name': None,
     'input_name': None,
     'input_size': None
@@ -240,16 +242,22 @@ def load_model_once(model_name: str, use_gpu: bool) -> bool:
             return False
             
         tags = []
+        tag_categories = []
         with open(csv_path, newline='', encoding='utf-8') as f:
             reader = csv.reader(f)
             next(reader)  # Skip header
             for row in reader:
                 if len(row) > 1:
                     tags.append(row[1])
+                    try:
+                        tag_categories.append(int(row[2]))
+                    except (ValueError, IndexError):
+                        tag_categories.append(-1)
         
         # Cache the model and tags
         model_cache['session'] = sess
         model_cache['tags'] = tags
+        model_cache['tag_categories'] = tag_categories
         model_cache['model_name'] = model_name
         model_cache['input_name'] = input_name
         model_cache['input_size'] = input_size
@@ -291,7 +299,7 @@ class BSS_LoadImagesFolder:
     def VALIDATE_INPUTS(cls, **kwargs):
         return True
 
-    def load_images(self, folder_path: str) -> Tuple[List[np.ndarray], List[str], str]:
+    def load_images(self, folder_path: str) -> Tuple[List[torch.Tensor], List[str], str]:
         """
         Load images from specified folder path.
         
@@ -333,11 +341,11 @@ class BSS_LoadImagesFolder:
             
             try:
                 with Image.open(image_path) as img:
-                    arr = np.array(img.convert("RGB"))
+                    arr = np.array(img.convert("RGB"), dtype=np.float32) / 255.0
                     if arr.size == 0 or arr.shape[0] == 0 or arr.shape[1] == 0:
                         logger.warning(f"Empty array for {image_path.name}, skipping")
                         continue
-                    images.append(arr)
+                    images.append(torch.from_numpy(arr))
                     filenames.append(image_path.name)
             except Exception as e:
                 logger.error(f"Error loading {image_path.name}: {e}")
@@ -433,7 +441,7 @@ class BSS_WD14BatchTagger:
     OUTPUT_NODE = True
     CATEGORY = "BSS/Image Processing"
 
-    def tag_batch(self, image: np.ndarray, filename: str, folder_path: str, model: str, 
+    def tag_batch(self, image: Any, filename: str, folder_path: str, model: str, 
                    threshold: float, character_threshold: float, replace_underscore: bool, 
                    use_gpu: bool, prepend_tags: str, exclude_tags: str) -> Tuple[str]:
         """
@@ -469,6 +477,7 @@ class BSS_WD14BatchTagger:
             # Get cached model data
             sess = model_cache['session']
             tags = model_cache['tags']
+            tag_categories = model_cache.get('tag_categories', [])
             input_name = model_cache['input_name']
             input_size = model_cache['input_size']
             
@@ -482,11 +491,26 @@ class BSS_WD14BatchTagger:
             exclude_list = [t.strip().lower() for t in exclude_tags.split(",") if t.strip()]
 
             # Process image
-            if image is None or image.size == 0 or image.shape[0] == 0 or image.shape[1] == 0:
+            if isinstance(image, torch.Tensor):
+                image_np = image.detach().cpu().numpy()
+            else:
+                image_np = np.asarray(image)
+
+            if image_np is None or image_np.size == 0:
                 logger.warning(f"Empty image array for {filename}, skipping")
                 return ("",)
 
-            img = Image.fromarray(image)
+            if image_np.ndim == 4:
+                image_np = image_np[0]
+
+            if image_np.shape[-1] == 4:
+                image_np = image_np[:, :, :3]
+
+            if image_np.dtype != np.uint8:
+                image_np = np.clip(image_np, 0.0, 1.0)
+                image_np = (image_np * 255.0).astype(np.uint8)
+
+            img = Image.fromarray(image_np)
             ratio = input_size / max(img.size)
             new_size = (int(img.size[0] * ratio), int(img.size[1] * ratio))
             
@@ -513,8 +537,9 @@ class BSS_WD14BatchTagger:
             
             # Filter tags by threshold and exclusions
             result_tags = []
-            for tag, prob in zip(processed_tags, probs):
-                if prob > threshold and tag.lower() not in exclude_list:
+            for idx, (tag, prob) in enumerate(zip(processed_tags, probs)):
+                current_threshold = character_threshold if idx < len(tag_categories) and tag_categories[idx] == 4 else threshold
+                if prob > current_threshold and tag.lower() not in exclude_list:
                     result_tags.append(tag)
 
             # Build output string
