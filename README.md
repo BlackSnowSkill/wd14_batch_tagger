@@ -1,117 +1,76 @@
 # BSS WD14 Batch Tagger
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-Automatic image tagging using WD14 models with batch processing for ComfyUI.
+Custom nodes for **ComfyUI** for automatic WD14 image tagging, batch workflows, tag postprocessing, caption export, and basic tag analytics.
 
 ## Features
 
-- **4 WD14 v3 Models**: ViT, SwinV2, EVA02, ConvNeXT
-- **Auto Download**: Models download automatically from Hugging Face
-- **GPU Support**: CUDA acceleration for faster processing
-- **Batch Processing**: Process multiple images from folders
-- **Format Support**: JPG, JPEG, PNG, WEBP
-- **Custom Tags**: Add/remove tags as needed
+- WD14 v3 model support (ViT / SwinV2 / EVA02 / ConvNeXT)
+- Automatic model download from Hugging Face
+- Single-image and batch tagging nodes
+- Category-aware thresholds (`general`, `character`, `meta`, `rating`)
+- Tag postprocessing (dedupe, sorting, include/exclude operations)
+- Caption saving to `txt`, `json`, `csv`
+- Tag frequency analytics (`top-k` + JSON stats)
 
 ## Installation
 
 ### Via ComfyUI Manager
 
 1. Open ComfyUI Manager
-2. Go to Registry tab
-3. Search for "BSS WD14 Batch Tagger"
-4. Click Install
-5. Restart ComfyUI
+2. Find **BSS WD14 Batch Tagger**
+3. Install and restart ComfyUI
 
-### Manual Installation
+### Manual
 
 ```bash
-cd ComfyUI/custom_nodes/
+cd ComfyUI/custom_nodes
 git clone https://github.com/BlackSnowSkill/wd14_batch_tagger.git
 cd wd14_batch_tagger
 pip install -r requirements.txt
 ```
 
-## Usage
+## Included Nodes
 
-### Nodes
+- **BSS Load Images from Folder 📂** — loads folder images (`jpg`, `jpeg`, `png`, `webp`)
+- **BSS WD14 Batch Tagger 🌿** — tags a single image and can save `.txt`
+- **BSS WD14 Tagger Batch ⚡** — tags a list/batch and returns JSON scores
+- **BSS Tags Postprocess 🧹** — cleanup/sort/dedupe/filter tag strings
+- **BSS Save Captions 💾** — save captions in `txt/json/csv`
+- **BSS Tag Analytics 📊** — compute top tag stats
 
-**BSS Load Images from Folder 📂**
-- Loads images from a folder for batch processing
+## Usage (basic pipeline)
 
-**BSS WD14 Batch Tagger 🌿**
-- Tags images using WD14 models
-- Saves tags to .txt files
-
-### Basic Workflow
-
-1. Use **BSS Load Images from Folder** to load your images
-2. Connect to **BSS WD14 Batch Tagger** for each image
-3. Set output folder for tag files
-4. Run the workflow
-
-### Settings
-
-- **Model**: Choose WD14 model (auto-downloads if needed)
-- **Threshold**: Tag confidence (0.35 default)
-- **GPU**: Enable for faster processing
-- **Prepend/Exclude**: Add custom tags or remove unwanted ones
-
-## Models
-
-- **WD ViT Tagger v3**: Fast, good quality (default)
-- **WD SwinV2 Tagger v3**: Balanced speed/quality
-- **WD EVA02 Large Tagger v3**: Best accuracy
-- **WD ConvNeXT Tagger v3**: Modern architecture
-
-Models download automatically on first use.
+1. Load images with **BSS Load Images from Folder 📂**
+2. Run tagging via:
+   - **BSS WD14 Batch Tagger 🌿** (single), or
+   - **BSS WD14 Tagger Batch ⚡** (batch)
+3. (Optional) Clean results using **BSS Tags Postprocess 🧹**
+4. (Optional) Save captions with **BSS Save Captions 💾**
+5. (Optional) Inspect distribution using **BSS Tag Analytics 📊**
 
 ## Requirements
 
 - Python 3.8+
 - ComfyUI
+- `onnxruntime>=1.18.0,<2.0.0`
 - CUDA GPU (optional)
 
-## Troubleshooting
+## Changelog
 
-### onnxruntime Not Available Error
+### v2.0.0
 
-If you see "onnxruntime is not available", fix it:
+- Added batch node: **BSS WD14 Tagger Batch ⚡**
+- Added postprocessing node: **BSS Tags Postprocess 🧹**
+- Added caption writer node: **BSS Save Captions 💾**
+- Added analytics node: **BSS Tag Analytics 📊**
+- Added category-aware WD14 thresholds (`general/character/meta/rating`)
+- Improved image normalization compatibility with ComfyUI `IMAGE`
 
-**Step 1: Remove conflicting packages**
-```bash
-pip uninstall onnxruntime onnxruntime-gpu -y
-```
+### v1.0.1
 
-**Step 2: Install correct version**
-```bash
-pip install 'onnxruntime>=1.18.0,<2.0.0'
-```
-
-**Step 3: Verify installation**
-```bash
-python -c "import onnxruntime; print(onnxruntime.__version__)"
-```
-
-**Or reinstall the entire node:**
-```bash
-cd ComfyUI/custom_nodes/wd14_batch_tagger
-pip install -r requirements.txt --upgrade --force-reinstall
-```
-
-**Note:** Make sure you're using the correct Python environment (ComfyUI's venv).
-
-## Support
-
-- **GitHub**: [Issues](https://github.com/BlackSnowSkill/wd14_batch_tagger/issues)
-- **Civitai**: [Profile](https://civitai.com/user/llikswonskcalb)
-- **Boosty**: [Support](https://boosty.to/blacksnowskill)
+- Stabilized `onnxruntime` handling and compatibility checks
+- Improved model loading reliability
 
 ## License
 
-MIT License - see LICENSE file for details.
-
----
-
-**Author**: Blacksnowskill
+MIT License
