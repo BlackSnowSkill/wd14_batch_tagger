@@ -1,117 +1,100 @@
 # BSS WD14 Batch Tagger
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+Набор пользовательских нод для **ComfyUI** для автоматического теггинга изображений через WD14, пакетной обработки, постобработки тегов, сохранения caption и базовой аналитики.
 
-Automatic image tagging using WD14 models with batch processing for ComfyUI.
+## Возможности
 
-## Features
+- Поддержка WD14 v3 моделей (ViT / SwinV2 / EVA02 / ConvNeXT)
+- Автоматическая загрузка моделей с Hugging Face
+- Ноды для одиночного и пакетного теггинга
+- Пороги по категориям (`general`, `character`, `meta`, `rating`)
+- Постобработка тегов (удаление дублей, сортировка, include/exclude)
+- Сохранение caption в `txt`, `json`, `csv`
+- Аналитика тегов (`top-k` + JSON статистика)
 
-- **4 WD14 v3 Models**: ViT, SwinV2, EVA02, ConvNeXT
-- **Auto Download**: Models download automatically from Hugging Face
-- **GPU Support**: CUDA acceleration for faster processing
-- **Batch Processing**: Process multiple images from folders
-- **Format Support**: JPG, JPEG, PNG, WEBP
-- **Custom Tags**: Add/remove tags as needed
+## Установка
 
-## Installation
+### Через ComfyUI Manager
 
-### Via ComfyUI Manager
+1. Откройте ComfyUI Manager
+2. Найдите **BSS WD14 Batch Tagger**
+3. Установите ноду и перезапустите ComfyUI
 
-1. Open ComfyUI Manager
-2. Go to Registry tab
-3. Search for "BSS WD14 Batch Tagger"
-4. Click Install
-5. Restart ComfyUI
-
-### Manual Installation
+### Ручная установка
 
 ```bash
-cd ComfyUI/custom_nodes/
+cd ComfyUI/custom_nodes
 git clone https://github.com/BlackSnowSkill/wd14_batch_tagger.git
 cd wd14_batch_tagger
 pip install -r requirements.txt
 ```
 
-## Usage
+## Ноды в репозитории
 
-### Nodes
+- **BSS Load Images from Folder 📂** — загрузка изображений из папки (`jpg`, `jpeg`, `png`, `webp`)
+- **BSS WD14 Batch Tagger 🌿** — теггинг одного изображения, при необходимости сохранение `.txt`
+- **BSS WD14 Tagger Batch ⚡** — пакетный теггинг с возвратом JSON со score
+- **BSS Tags Postprocess 🧹** — очистка/сортировка/дедупликация/фильтрация тегов
+- **BSS Save Captions 💾** — сохранение caption в `txt/json/csv`
+- **BSS Tag Analytics 📊** — подсчёт частотности и top тегов
 
-**BSS Load Images from Folder 📂**
-- Loads images from a folder for batch processing
+## Использование
 
-**BSS WD14 Batch Tagger 🌿**
-- Tags images using WD14 models
-- Saves tags to .txt files
+### Базовый сценарий
 
-### Basic Workflow
+1. Загрузите изображения через **BSS Load Images from Folder 📂**
+2. Выполните теггинг:
+   - **BSS WD14 Batch Tagger 🌿** — для одиночного режима
+   - **BSS WD14 Tagger Batch ⚡** — для пакетного режима
+3. (Опционально) Очистите теги через **BSS Tags Postprocess 🧹**
+4. (Опционально) Сохраните результат через **BSS Save Captions 💾**
+5. (Опционально) Посмотрите статистику через **BSS Tag Analytics 📊**
 
-1. Use **BSS Load Images from Folder** to load your images
-2. Connect to **BSS WD14 Batch Tagger** for each image
-3. Set output folder for tag files
-4. Run the workflow
+### Пример workflow (пакетный)
 
-### Settings
+```text
+BSS Load Images from Folder 📂
+  ├─ images ───────► BSS WD14 Tagger Batch ⚡
+  ├─ filenames ────► BSS WD14 Tagger Batch ⚡
+  └─ folder_path ─► BSS WD14 Tagger Batch ⚡
 
-- **Model**: Choose WD14 model (auto-downloads if needed)
-- **Threshold**: Tag confidence (0.35 default)
-- **GPU**: Enable for faster processing
-- **Prepend/Exclude**: Add custom tags or remove unwanted ones
+BSS WD14 Tagger Batch ⚡ (tags)
+  └───────────────► BSS Tags Postprocess 🧹
+                       └──────────────► BSS Save Captions 💾
 
-## Models
+BSS WD14 Tagger Batch ⚡ (tags_json)
+  └───────────────► BSS Tag Analytics 📊
+```
 
-- **WD ViT Tagger v3**: Fast, good quality (default)
-- **WD SwinV2 Tagger v3**: Balanced speed/quality
-- **WD EVA02 Large Tagger v3**: Best accuracy
-- **WD ConvNeXT Tagger v3**: Modern architecture
+Рекомендуемые стартовые параметры WD14:
+- `general_threshold`: `0.35`
+- `character_threshold`: `0.85`
+- `meta_threshold`: `0.50`
+- `rating_threshold`: `0.50`
 
-Models download automatically on first use.
-
-## Requirements
+## Требования
 
 - Python 3.8+
 - ComfyUI
-- CUDA GPU (optional)
+- `onnxruntime>=1.18.0,<2.0.0`
+- CUDA GPU (опционально)
 
-## Troubleshooting
+## Changelog
 
-### onnxruntime Not Available Error
+### v2.0.0
 
-If you see "onnxruntime is not available", fix it:
+- Добавлена пакетная нода: **BSS WD14 Tagger Batch ⚡**
+- Добавлена нода постобработки: **BSS Tags Postprocess 🧹**
+- Добавлена нода сохранения caption: **BSS Save Captions 💾**
+- Добавлена нода аналитики: **BSS Tag Analytics 📊**
+- Добавлены пороги по категориям (`general/character/meta/rating`)
+- Улучшена совместимость нормализации изображений с форматом ComfyUI `IMAGE`
 
-**Step 1: Remove conflicting packages**
-```bash
-pip uninstall onnxruntime onnxruntime-gpu -y
-```
+### v1.0.1
 
-**Step 2: Install correct version**
-```bash
-pip install 'onnxruntime>=1.18.0,<2.0.0'
-```
+- Улучшена стабильность проверки/обработки `onnxruntime`
+- Повышена надёжность загрузки моделей
 
-**Step 3: Verify installation**
-```bash
-python -c "import onnxruntime; print(onnxruntime.__version__)"
-```
+## Лицензия
 
-**Or reinstall the entire node:**
-```bash
-cd ComfyUI/custom_nodes/wd14_batch_tagger
-pip install -r requirements.txt --upgrade --force-reinstall
-```
-
-**Note:** Make sure you're using the correct Python environment (ComfyUI's venv).
-
-## Support
-
-- **GitHub**: [Issues](https://github.com/BlackSnowSkill/wd14_batch_tagger/issues)
-- **Civitai**: [Profile](https://civitai.com/user/llikswonskcalb)
-- **Boosty**: [Support](https://boosty.to/blacksnowskill)
-
-## License
-
-MIT License - see LICENSE file for details.
-
----
-
-**Author**: Blacksnowskill
+MIT License
