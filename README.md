@@ -13,6 +13,7 @@ Automatic image tagging using WD14 models with batch processing for ComfyUI.
 - **Batch Processing**: Process multiple images from folders
 - **Format Support**: JPG, JPEG, PNG, WEBP
 - **Custom Tags**: Add/remove tags as needed
+- **ComfyUI IMAGE Compatibility**: Uses native tensor image format for modern ComfyUI builds
 
 ## Installation
 
@@ -55,8 +56,15 @@ pip install -r requirements.txt
 
 - **Model**: Choose WD14 model (auto-downloads if needed)
 - **Threshold**: Tag confidence (0.35 default)
+- **Character Threshold**: Separate threshold for character tags (WD category 4)
 - **GPU**: Enable for faster processing
 - **Prepend/Exclude**: Add custom tags or remove unwanted ones
+
+## ComfyUI Compatibility
+
+- Tested against current ComfyUI custom node API style (`NODE_CLASS_MAPPINGS`, `INPUT_TYPES`, `RETURN_TYPES`).
+- Uses ComfyUI-native `IMAGE` tensors (`float32`, range `0..1`) in the loader node output.
+- Tagger node accepts both tensor images (ComfyUI-native) and numpy arrays for backward compatibility.
 
 ## Models
 
