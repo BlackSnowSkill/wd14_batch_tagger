@@ -208,6 +208,9 @@ def load_model_once(model_name: str, use_gpu: bool) -> bool:
             logger.error(f"CSV file not found: {csv_path}")
             return False
 
+            
+        tags = []
+        tag_categories = []
         with open(csv_path, newline='', encoding='utf-8') as f:
             reader = csv.reader(f)
             next(reader)
@@ -219,6 +222,8 @@ def load_model_once(model_name: str, use_gpu: bool) -> bool:
                     except (ValueError, IndexError):
                         tag_categories.append(-1)
 
+        
+        # Cache the model and tags
         model_cache['session'] = sess
         model_cache['tags'] = tags
         model_cache['tag_categories'] = tag_categories
@@ -335,6 +340,15 @@ class BSS_LoadImagesFolder:
         return True
 
     def load_images(self, folder_path: str) -> Tuple[List[torch.Tensor], List[str], str]:
+        """
+        Load images from specified folder path.
+        
+        Args:
+            folder_path: Path to folder containing images
+            
+        Returns:
+            Tuple of (images, filenames, folder_path)
+        """
         if not folder_path or not os.path.exists(folder_path):
             logger.error(f"Invalid folder path: {folder_path}")
             return [], [], folder_path
@@ -465,6 +479,108 @@ class BSS_WD14BatchTagger:
                 use_gpu,
             )
 
+    def tag_batch(self, image: Any, filename: str, folder_path: str, model: str, 
+                   threshold: float, character_threshold: float, replace_underscore: bool, 
+                   use_gpu: bool, prepend_tags: str, exclude_tags: str) -> Tuple[str]:
+        """
+        Tag a single image using WD14 model and save tags to txt file.
+        
+        Args:
+            image: Input image as numpy array
+            filename: Original filename
+            folder_path: Output folder path
+            model: Model name (format: "model_name|display_name")
+            threshold: Confidence threshold for tags
+            character_threshold: Character-specific threshold
+            replace_underscore: Whether to replace underscores with spaces
+            use_gpu: Whether to use GPU acceleration
+            prepend_tags: Tags to prepend to result
+            exclude_tags: Tags to exclude from result
+            
+        Returns:
+            Tuple containing the generated tags string
+        """
+        try:
+            # Extract model name from dropdown selection (handle both formats)
+            if "|" in model:
+                model_name = model.split("|")[0]
+            else:
+                model_name = model
+            
+            # Load model once (cached for subsequent calls)
+            if not load_model_once(model_name, use_gpu):
+                logger.error(f"Failed to load model: {model_name}")
+                return ("",)
+            
+            # Get cached model data
+            sess = model_cache['session']
+            tags = model_cache['tags']
+            tag_categories = model_cache.get('tag_categories', [])
+            input_name = model_cache['input_name']
+            input_size = model_cache['input_size']
+            
+            # Process tags (replace underscores if needed)
+            processed_tags = []
+            for tag in tags:
+                processed_tag = tag.replace("_", " ") if replace_underscore else tag
+                processed_tags.append(processed_tag)
+            
+            # Parse exclude tags
+            exclude_list = [t.strip().lower() for t in exclude_tags.split(",") if t.strip()]
+
+            # Process image
+            if isinstance(image, torch.Tensor):
+                image_np = image.detach().cpu().numpy()
+            else:
+                image_np = np.asarray(image)
+
+            if image_np is None or image_np.size == 0:
+                logger.warning(f"Empty image array for {filename}, skipping")
+                return ("",)
+
+            if image_np.ndim == 4:
+                image_np = image_np[0]
+
+            if image_np.shape[-1] == 4:
+                image_np = image_np[:, :, :3]
+
+            if image_np.dtype != np.uint8:
+                image_np = np.clip(image_np, 0.0, 1.0)
+                image_np = (image_np * 255.0).astype(np.uint8)
+
+            img = Image.fromarray(image_np)
+            ratio = input_size / max(img.size)
+            new_size = (int(img.size[0] * ratio), int(img.size[1] * ratio))
+            
+            if new_size[0] <= 0 or new_size[1] <= 0:
+                logger.error(f"Invalid resize dimensions {new_size} for {filename}")
+                return ("",)
+
+            # Resize and center image
+            try:
+                # Use new Pillow API if available
+                img = img.resize(new_size, Image.Resampling.LANCZOS)
+            except AttributeError:
+                # Fallback for older Pillow versions
+                img = img.resize(new_size, Image.LANCZOS)
+            square = Image.new("RGB", (input_size, input_size), (255, 255, 255))
+            paste_pos = ((input_size - new_size[0]) // 2, (input_size - new_size[1]) // 2)
+            square.paste(img, paste_pos)
+            
+            # Convert to model input format (BGR, normalized)
+            inp = np.expand_dims(np.array(square).astype(np.float32)[:, :, ::-1], 0)
+
+            # Run inference
+            probs = sess.run(None, {input_name: inp})[0][0]
+            
+            # Filter tags by threshold and exclusions
+            result_tags = []
+            for idx, (tag, prob) in enumerate(zip(processed_tags, probs)):
+                current_threshold = character_threshold if idx < len(tag_categories) and tag_categories[idx] == 4 else threshold
+                if prob > current_threshold and tag.lower() not in exclude_list:
+                    result_tags.append(tag)
+
+            # Build output string
             output_tags = prepend_tags.strip()
             if output_tags and result_tags:
                 output_tags += ", "

@@ -11,6 +11,13 @@
 - ✅ Нода аналитики тегов (top-k + JSON статистика)
 
 ## Ноды
+- **4 WD14 v3 Models**: ViT, SwinV2, EVA02, ConvNeXT
+- **Auto Download**: Models download automatically from Hugging Face
+- **GPU Support**: CUDA acceleration for faster processing
+- **Batch Processing**: Process multiple images from folders
+- **Format Support**: JPG, JPEG, PNG, WEBP
+- **Custom Tags**: Add/remove tags as needed
+- **ComfyUI IMAGE Compatibility**: Uses native tensor image format for modern ComfyUI builds
 
 ### 1) BSS Load Images from Folder 📂
 Загружает изображения из папки (JPG/JPEG/PNG/WEBP) и отдает `IMAGE` + имена файлов.
@@ -40,6 +47,39 @@
 
 ### 5) BSS Save Captions 💾
 Сохраняет caption в `txt/json/csv`, есть `overwrite` и `suffix`.
+1. Use **BSS Load Images from Folder** to load your images
+2. Connect to **BSS WD14 Batch Tagger** for each image
+3. Set output folder for tag files
+4. Run the workflow
+
+### Settings
+
+- **Model**: Choose WD14 model (auto-downloads if needed)
+- **Threshold**: Tag confidence (0.35 default)
+- **Character Threshold**: Separate threshold for character tags (WD category 4)
+- **GPU**: Enable for faster processing
+- **Prepend/Exclude**: Add custom tags or remove unwanted ones
+
+## ComfyUI Compatibility
+
+- Tested against current ComfyUI custom node API style (`NODE_CLASS_MAPPINGS`, `INPUT_TYPES`, `RETURN_TYPES`).
+- Uses ComfyUI-native `IMAGE` tensors (`float32`, range `0..1`) in the loader node output.
+- Tagger node accepts both tensor images (ComfyUI-native) and numpy arrays for backward compatibility.
+
+## Models
+
+- **WD ViT Tagger v3**: Fast, good quality (default)
+- **WD SwinV2 Tagger v3**: Balanced speed/quality
+- **WD EVA02 Large Tagger v3**: Best accuracy
+- **WD ConvNeXT Tagger v3**: Modern architecture
+
+Models download automatically on first use.
+
+## Requirements
+
+- Python 3.8+
+- ComfyUI
+- CUDA GPU (optional)
 
 ### 6) BSS Tag Analytics 📊
 Считает top-k частых тегов и возвращает JSON статистику.
@@ -67,3 +107,9 @@ pip install -r requirements.txt
 
 ## License
 MIT
+
+MIT License - see LICENSE file for details.
+
+---
+
+**Author**: Blacksnowskill
