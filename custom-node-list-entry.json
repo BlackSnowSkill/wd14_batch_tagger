@@ -11,14 +11,14 @@
     "category": "Image Processing",
     "tags": ["image", "tagging", "wd14", "batch", "gpu"],
     "pip": [
-      "onnxruntime>=1.16.0",
+      "onnxruntime>=1.18.0,<2.0.0",
       "numpy>=1.24.0", 
       "pillow>=9.0.0",
       "huggingface-hub>=0.16.0"
     ],
     "custom_installer": "install.py",
     "python_requirements": [
-      "onnxruntime>=1.16.0",
+      "onnxruntime>=1.18.0,<2.0.0",
       "numpy>=1.24.0",
       "pillow>=9.0.0", 
       "huggingface-hub>=0.16.0"

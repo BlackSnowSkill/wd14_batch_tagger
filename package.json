@@ -1,6 +1,6 @@
 {
   "name": "wd14-batch-tagger",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Automatic image tagging using WD14 models with batch processing capabilities",
   "author": "Blacksnowskill",
   "license": "MIT",
@@ -28,7 +28,7 @@
     "install_script": "install.py"
   },
   "dependencies": {
-    "onnxruntime": ">=1.16.0",
+    "onnxruntime": ">=1.18.0,<2.0.0",
     "numpy": ">=1.24.0",
     "pillow": ">=9.0.0",
     "huggingface-hub": ">=0.16.0"
