@@ -104,14 +104,13 @@ pip install -r requirements.txt
 
 ## Models
 
-- **WD ViT Tagger v3**: Fast, good quality (default)
-- **WD SwinV2 Tagger v3**: Balanced speed/quality
-- **WD EVA02 Large Tagger v3**: Best accuracy
-- **WD ConvNeXT Tagger v3**: Modern architecture
+Рекомендуемые стартовые параметры WD14:
+- `general_threshold`: `0.35`
+- `character_threshold`: `0.85`
+- `meta_threshold`: `0.50`
+- `rating_threshold`: `0.50`
 
-Models download automatically on first use.
-
-## Requirements
+## Требования
 
 - Python 3.8+
 - ComfyUI
