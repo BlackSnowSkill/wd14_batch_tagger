@@ -150,12 +150,6 @@ pip install -r requirements.txt
 - ComfyUI (актуальные сборки)
 - onnxruntime `>=1.18.0,<2.0.0`
 
-## Публикация v2.0 в ComfyUI Manager
-
-1. Убедитесь, что версия обновлена в `pyproject.toml` и `package.json`.
-2. Создайте git tag `v2.0.0` и push.
-3. Опубликуйте через `comfy node publish` или ваш GitHub Action для registry.
-
 ## License
 MIT
 
